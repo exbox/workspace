@@ -12,63 +12,14 @@ COL_CYAN=$ESC_SEQ"36;01m"
 
 # Commonly Used Aliases
 alias ..="cd .."
-alias c="clear"
-alias cla="clear && ls -l"
-alias cll="clear && ls -la"
-alias cls="clear && ls"
 alias code="cd /var/www"
-alias ea="vi ~/aliases"
-alias g="gulp"
-alias home="cd ~"
-alias npm-global="npm list -g --depth 0"
-alias ra="reload"
-alias reload="source ~/.aliases && echo \"$COL_GREEN ==> Aliases Reloaded... $COL_RESET \n \""
 alias run="npm run"
-alias tree="xtree"
 
 # Laravel / PHP Alisases
-alias art="php artisan"
 alias pa="php artisan"
-alias reseed="php artisan migrate:refresh --seed && php artisan bouncer:seed"
 alias artisan="php artisan"
 alias cdump="composer dump-autoload -o"
-alias composer:dump="composer dump-autoload -o"
-alias db:reset="php artisan migrate:reset && php artisan migrate --seed"
 alias reseed="php artisan migrate:fresh --seed"
 alias migrate="php artisan migrate"
 alias seed="php artisan:seed"
 alias phpunit="./vendor/bin/phpunit"
-
-
-# requires installation of 'https://www.npmjs.com/package/npms-cli'
-alias npms="npms search"
-
-# requires installation of 'https://www.npmjs.com/package/package-menu-cli'
-alias pm="package-menu"
-
-# requires installation of 'https://www.npmjs.com/package/pkg-version-cli'
-alias pv="package-version"
-
-# requires installation of 'https://github.com/sindresorhus/latest-version-cli'
-alias lv="latest-version"
-
-# git aliases
-alias gaa="git add ."
-alias gd="git --no-pager diff"
-alias git-revert="git reset --hard && git clean -df"
-alias gs="git status"
-alias whoops="git reset --hard && git clean -df"
-
-
-# Create a new directory and enter it
-function mkd() {
-    mkdir -p "$@" && cd "$@"
-}
-
-function md() {
-    mkdir -p "$@" && cd "$@"
-}
-
-function xtree {
-    find ${1:-.} -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
-}
