@@ -1,6 +1,62 @@
-FROM laradock/workspace:1.8-71
-
+FROM phusion/baseimage:latest
 MAINTAINER Mahmoud Zalt <mahmoud@zalt.me>
+
+RUN DEBIAN_FRONTEND=noninteractive
+RUN locale-gen en_US.UTF-8
+
+ENV LANGUAGE=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV LC_CTYPE=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV TERM xterm
+
+RUN apt-get install -y software-properties-common && add-apt-repository -y ppa:ondrej/php
+
+#--------------------------------------------------------------------------
+# Software's Installation
+#--------------------------------------------------------------------------
+
+# Install "PHP Extentions", "libraries", "Software's"
+RUN apt-get update && \
+    apt-get install -y --allow-downgrades --allow-remove-essential \
+        --allow-change-held-packages \
+        php7.1-cli \
+        php7.1-common \
+        php7.1-curl \
+        php7.1-intl \
+        php7.1-json \
+        php7.1-xml \
+        php7.1-mbstring \
+        php7.1-mcrypt \
+        php7.1-mysql \
+        php7.1-pgsql \
+        php7.1-sqlite \
+        php7.1-sqlite3 \
+        php7.1-zip \
+        php7.1-bcmath \
+        php7.1-memcached \
+        php7.1-gd \
+        php7.1-dev \
+        pkg-config \
+        libcurl4-openssl-dev \
+        libedit-dev \
+        libssl-dev \
+        libxml2-dev \
+        xz-utils \
+        libsqlite3-dev \
+        sqlite3 \
+        git \
+        curl \
+        vim \
+        nano \
+        postgresql-client \
+    && apt-get clean
+
+# Install composer and add its bin to the PATH.
+RUN curl -s http://getcomposer.org/installer | php && echo "export PATH=${PATH}:/var/www/vendor/bin" >> ~/.bashrc && mv composer.phar /usr/local/bin/composer
+
+# Source the bash
+RUN . ~/.bashrc
 
 #####################################
 # Non-Root User:
@@ -23,7 +79,7 @@ USER root
 # Set Timezone
 #####################################
 
-ARG TZ=UTC
+ARG TZ=Europe/London
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -102,7 +158,7 @@ RUN echo "" >> ~/.bashrc && \
 
 USER laradock
 
-ARG INSTALL_YARN=false
+ARG INSTALL_YARN=true
 ARG YARN_VERSION=latest
 
 RUN [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && \
@@ -150,6 +206,41 @@ ENV INSTALL_IMAGE_OPTIMIZERS ${INSTALL_IMAGE_OPTIMIZERS}
 RUN apt-get install -y --force-yes jpegoptim optipng pngquant gifsicle && . ~/.bashrc && npm install -g svgo
 
 USER laradock
+
+
+#####################################
+# PYTHON:
+#####################################
+
+ARG INSTALL_PYTHON=false
+ENV INSTALL_PYTHON ${INSTALL_PYTHON}
+RUN if [ ${INSTALL_PYTHON} = true ]; then \
+  apt-get update \
+  && apt-get -y install python python-pip python-dev build-essential  \
+  && pip install --upgrade pip  \
+  && pip install --upgrade virtualenv \
+;fi
+
+#####################################
+# ImageMagick:
+#####################################
+USER root
+ARG INSTALL_IMAGEMAGICK=true
+ENV INSTALL_IMAGEMAGICK ${INSTALL_IMAGEMAGICK}
+RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
+    apt-get install -y --force-yes imagemagick php-imagick \
+;fi
+
+
+
+#####################################
+# FTP:
+#####################################
+
+
+
+
+
 
 # Clean up
 USER root
