@@ -1,7 +1,9 @@
-FROM phusion/baseimage:latest
+FROM ubuntu:cosmic
+#FROM phusion/baseimage:latest
 
 RUN DEBIAN_FRONTEND=noninteractive
-RUN locale-gen en_US.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
+#RUN locale-gen en_US.UTF-8
 
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
@@ -9,7 +11,18 @@ ENV LC_CTYPE=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV TERM xterm
 
-RUN apt-get install -y software-properties-common && add-apt-repository -y ppa:ondrej/php
+#####################################
+# Set Timezone
+#####################################
+
+ARG TZ=Europe/London
+ENV TZ ${TZ}
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+#RUN apt-get update && apt-get install -y software-properties-common && add-apt-repository -y ppa:ondrej/php  && add-apt-repository ppa:apt-fast/stable
+RUN apt-get update && apt-get install -y software-properties-common && add-apt-repository -y ppa:ondrej/php 
+
+#RUN apt-get install -y apt-fast;
 
 RUN rm /var/log/lastlog /var/log/faillog
 
@@ -18,29 +31,30 @@ RUN rm /var/log/lastlog /var/log/faillog
 #--------------------------------------------------------------------------
 
 # Install "PHP Extentions", "libraries", "Software's"
-RUN apt-get update && \
-    apt-get install -y --allow-downgrades --allow-remove-essential \
+RUN apt update && \
+    apt install -y --allow-downgrades --allow-remove-essential \
         --allow-change-held-packages \
-        php7.2-cli \
-        php7.2-common \
-        php7.2-curl \
-        php7.2-intl \
-        php7.2-json \
-        php7.2-xml \
-        php7.2-mbstring \
-        php7.2-imagick \
-        php7.2-mysql \
-        php7.2-pgsql \
-        php7.2-sqlite \
-        php7.2-sqlite3 \
-        php7.2-zip \
-        php7.2-bcmath \
-        php7.2-memcached \
-        php7.2-gd \
-        php7.2-dev \
+        php7.3-cli \
+        php7.3-common \
+        php7.3-curl \
+        php7.3-intl \
+        php7.3-json \
+        php7.3-xml \
+        php7.3-mbstring \
+        php7.3-imagick \
+        php7.3-mysql \
+        php7.3-pgsql \
+        php7.3-sqlite \
+        php7.3-sqlite3 \
+        php7.3-zip \
+        php7.3-bcmath \
+        php7.3-memcached \
+        php7.3-gd \
+        php7.3-dev \
+        php7.3-mongodb \
         pkg-config \
         libcurl4-openssl-dev \
-        libedit-dev \
+#        libedit-dev \
         libssl-dev \
         libxml2-dev \
         xz-utils \
@@ -49,13 +63,15 @@ RUN apt-get update && \
         git \
         curl \
         vim \
-        nano \
         postgresql-client \
+        mysql-client \
 #        libxpm4 libxrender1 libgtk2.0-0 libnss3 libgconf-2-4 \
 #        chromium-browser xvfb gtk2-engines-pixbuf \
 #        xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-base xfonts-scalable \
 #        x11-apps
-        imagemagick \
+#        imagemagick \
+        iputils-ping \
+        fish \
     && apt-get clean
 
 # Install composer and add its bin to the PATH.
@@ -80,14 +96,6 @@ RUN groupadd -g ${PGID} laradock && \
     apt-get update -yqq
 
 USER root
-
-#####################################
-# Set Timezone
-#####################################
-
-ARG TZ=Europe/London
-ENV TZ ${TZ}
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 #####################################
 # Composer:
@@ -184,44 +192,6 @@ RUN if [ ${NPM_REGISTRY} ]; then \
 ;fi
 
 #####################################
-# YARN:
-#####################################
-
-USER laradock
-
-ARG INSTALL_YARN=true
-ENV INSTALL_YARN ${INSTALL_YARN}
-ARG YARN_VERSION=latest
-ENV YARN_VERSION ${YARN_VERSION}
-
-RUN if [ ${INSTALL_YARN} = true ]; then \
-    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && \
-    if [ ${YARN_VERSION} = "latest" ]; then \
-        curl -o- -L https://yarnpkg.com/install.sh | bash; \
-    else \
-        curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version ${YARN_VERSION}; \
-    fi && \
-    echo "" >> ~/.bashrc && \
-    echo 'export PATH="$HOME/.yarn/bin:$PATH"' >> ~/.bashrc \
-;fi
-
-# Add YARN binaries to root's .bashrc
-USER root
-
-RUN if [ ${INSTALL_YARN} = true ]; then \
-    echo "" >> ~/.bashrc && \
-    echo 'export YARN_DIR="/home/laradock/.yarn"' >> ~/.bashrc && \
-    echo 'export PATH="$YARN_DIR/bin:$PATH"' >> ~/.bashrc \
-;fi
-
-
-#####################################
-# ZipArchive + Mysqldump for backups
-#####################################
-
-RUN apt-get update -yqq && apt-get install -y --force-yes php7.2-zip mysql-client
-
-#####################################
 # Non-root user : PHPUnit path
 #####################################
 
@@ -230,20 +200,6 @@ USER laradock
 
 RUN echo "" >> ~/.bashrc && \
     echo 'export PATH="/var/www/vendor/bin:$PATH"' >> ~/.bashrc
-
-USER laradock
-
-
-#####################################
-# Non-root user : PHPUnit path
-#####################################
-
-# add ./vendor/bin to non-root user's bashrc (needed for phpunit)
-USER laradock
-
-RUN echo "" >> ~/.bashrc && \
-    echo 'export PATH="/var/www/vendor/bin:$PATH"' >> ~/.bashrc
-
 
 #####################################
 # Prestissimo:
@@ -256,12 +212,14 @@ RUN composer global require "hirak/prestissimo"
 # Image optimizers:
 #####################################
 USER root
+
+RUN composer global require "hirak/prestissimo"
+
 ARG INSTALL_IMAGE_OPTIMIZERS=false
 ENV INSTALL_IMAGE_OPTIMIZERS ${INSTALL_IMAGE_OPTIMIZERS}
 RUN apt-get install -y --force-yes jpegoptim optipng pngquant gifsicle && . ~/.bashrc && npm install -g svgo
 
 USER laradock
-
 
 #####################################
 # PYTHON:
@@ -285,7 +243,6 @@ ENV INSTALL_IMAGEMAGICK ${INSTALL_IMAGEMAGICK}
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
     apt-get install -y --force-yes imagemagick php-imagick \
 ;fi
-
 
 #####################################
 # Dusk Dependencies:
@@ -313,12 +270,11 @@ RUN if [ ${INSTALL_DUSK_DEPS} = true ]; then \
   && rm chromedriver_linux64.zip \
 ;fi
 
-
 #####################################
 # Check PHP version:
 #####################################
 
-RUN php -v | head -n 1 | grep -q "PHP 7.2."
+#RUN php -v | head -n 1 | grep -q "PHP 7.2."
 
 #
 #--------------------------------------------------------------------------
@@ -333,4 +289,3 @@ RUN apt-get clean && \
 
 # Set default work directory
 WORKDIR /var/www
-
