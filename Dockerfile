@@ -1,9 +1,8 @@
-FROM ubuntu:cosmic
-#FROM phusion/baseimage:latest
+#FROM ubuntu:cosmic
+FROM phusion/baseimage:latest
 
 RUN DEBIAN_FRONTEND=noninteractive
-ENV DEBIAN_FRONTEND=noninteractive
-#RUN locale-gen en_US.UTF-8
+RUN locale-gen en_US.UTF-8
 
 ENV LANGUAGE=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
@@ -19,11 +18,7 @@ ARG TZ=Europe/London
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-#RUN apt-get update && apt-get install -y software-properties-common && add-apt-repository -y ppa:ondrej/php  && add-apt-repository ppa:apt-fast/stable
-RUN apt-get update && apt-get install -y software-properties-common && add-apt-repository -y ppa:ondrej/php 
-
-#RUN apt-get install -y apt-fast;
-
+RUN apt-get update && apt-get install -y software-properties-common && add-apt-repository -y ppa:ondrej/php
 RUN rm /var/log/lastlog /var/log/faillog
 
 #--------------------------------------------------------------------------
@@ -57,6 +52,7 @@ RUN apt update && \
 #        libedit-dev \
         libssl-dev \
         libxml2-dev \
+        libzip-dev zip unzip \
         xz-utils \
         libsqlite3-dev \
         sqlite3 \
@@ -87,7 +83,6 @@ RUN . ~/.bashrc
 # Add a non-root user to prevent files being created with root permissions on host machine.
 ARG PUID=1000
 ARG PGID=1000
-
 ENV PUID ${PUID}
 ENV PGID ${PGID}
 
